@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2021",
+
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@modules/*": ["src/modules/*"],
+      "@common/*": ["src/common/*"],
+      "@config/*": ["src/config/*"],
+      "@prisma/*": ["src/prisma/*"]
+    },
+
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+
+    "outDir": "./dist",
+    "sourceMap": true,
+    "incremental": true,
+    "skipLibCheck": true
+  }
+}
