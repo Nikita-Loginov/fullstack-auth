@@ -4,6 +4,7 @@ import { LoginDto, RegisterDto } from './dto';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { SessionService } from '../session/session.service';
+import { Recaptcha } from '@nestlab/google-recaptcha';
 
 @Controller('auth')
 export class AuthController {
@@ -13,6 +14,7 @@ export class AuthController {
     private readonly sessionService: SessionService,
   ) {}
 
+  @Recaptcha({action: 'register', score: 0.5})
   @Post('register')
   async register(@Body() dto: RegisterDto, @Req() req: Request) {
     const user = await this.authService.register(dto);
@@ -24,6 +26,7 @@ export class AuthController {
     return restUser;
   }
 
+  @Recaptcha({action: 'login', score: 0.5})
   @Post('login')
   async login(@Body() dto: LoginDto, @Req() req: Request) {
     const user = await this.authService.login(dto);
