@@ -5,12 +5,14 @@ import { UserModule } from '../user/user.module';
 import { SessionModule } from '../session/session.module';
 import { getRecaptchaConfig } from '@/config';
 import { GoogleRecaptchaModule } from '@nestlab/google-recaptcha';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
+import { PassportModule } from '@nestjs/passport';
+import { GoogleStrategy, GithubStrategy } from '@/strategies';
 
 @Module({
   imports: [
+    PassportModule.register({ defaultStrategy: 'google' }),
     GoogleRecaptchaModule.forRootAsync({
-      // imports: [ConfigModule],
       useFactory: getRecaptchaConfig,
       inject: [ConfigService],
     }),
@@ -18,6 +20,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     SessionModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, GoogleStrategy, GithubStrategy],
 })
 export class AuthModule {}

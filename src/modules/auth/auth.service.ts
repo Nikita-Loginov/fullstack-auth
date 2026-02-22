@@ -7,6 +7,7 @@ import { LoginDto, RegisterDto } from './dto';
 import { UserService } from '../user/user.service';
 import { AuthMethod } from 'generated/prisma/enums';
 import { verify } from 'argon2';
+import { UserProvider } from '@/lib/common/interfaces/auth';
 
 @Injectable()
 export class AuthService {
@@ -49,5 +50,21 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  async googleAuthCallback(googleUser: UserProvider, provider: AuthMethod) {
+    const user = await this.userService.findOrCreateOAuthUser(
+      provider,
+      {
+        providerId: googleUser.providerId,
+        email: googleUser.email,
+        displayName: googleUser.displayName,
+        picture: googleUser.picture,
+        accessToken: googleUser.accessToken,
+        refreshToken: googleUser.refreshToken,
+      },
+    );
+
+    return user
   }
 }

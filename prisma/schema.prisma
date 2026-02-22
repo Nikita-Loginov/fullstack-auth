@@ -34,8 +34,9 @@ model User {
 model Account {
   id String @id @default(uuid())
 
-  type     String
-  provider String
+  type       String
+  provider   AuthMethod
+  providerId String?    @map("provider_id")
 
   refreshToken String? @map("refresh_token")
   accessToken  String? @map("access_token")
@@ -70,7 +71,7 @@ enum UserRole {
 enum AuthMethod {
   CREDENTIALS
   GOOGLE
-  YANDEX
+  GITHUB
 }
 
 enum TokenType {
