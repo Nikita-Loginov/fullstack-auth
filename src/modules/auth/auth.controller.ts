@@ -8,6 +8,7 @@ import {
   Query,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -17,10 +18,9 @@ import { ConfigService } from '@nestjs/config';
 import { SessionService } from '../session/session.service';
 import { Recaptcha } from '@nestlab/google-recaptcha';
 import { AuthGuard } from '@nestjs/passport';
-import { getApplicationUrl } from '@/lib/common/utils';
 import { UserProvider } from '@/lib/common/interfaces/auth';
 import { AuthMethod } from 'generated/prisma/enums';
-import { User } from 'generated/prisma/client';
+import { EmailConfirmationService } from './email-confirmation/email-confirmation.service';
 
 @Controller('auth')
 export class AuthController {
@@ -28,24 +28,49 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
     private readonly sessionService: SessionService,
+    private readonly emailConfirmationService: EmailConfirmationService,
   ) {}
 
   @Recaptcha({ action: 'register', score: 0.5 })
   @Post('register')
-  async register(@Body() dto: RegisterDto, @Req() req: Request) {
+  async register(@Body() dto: RegisterDto) {
     const user = await this.authService.register(dto);
 
-    await this.sessionService.saveSession(req, user.id);
+    try {
+      await this.emailConfirmationService.sendVerificationToken(user);
+    } catch (error) {
+      console.error('Ошибка при отправке сообщения на почту', error);
+    }
 
-    const { password: _password, ...restUser } = user;
-
-    return restUser;
+    return {
+      message:
+        'Вы успешно зарегистрировались. Пожалуйста, подтвердите ваш email, сообщение было отправлено на ваш почтовый адрес',
+    };
   }
 
   @Recaptcha({ action: 'login', score: 0.5 })
   @Post('login')
   async login(@Body() dto: LoginDto, @Req() req: Request) {
     const user = await this.authService.login(dto);
+    
+    const FIVE_MINUTES = 5 * 60 * 1000;
+
+    const lastUpdated = new Date(user.updatedAt).getTime();
+    const now = new Date().getTime();
+    
+    if (!user.isVerified && now - lastUpdated > FIVE_MINUTES) {
+      try {
+        await this.emailConfirmationService.sendVerificationToken(user);
+      } catch (error) {
+        console.error(`Ошибка при отправке сообщения на почту для ${user.email}`, error);
+      }
+    }
+    
+    if (!user.isVerified) {
+      throw new UnauthorizedException(
+        'Ваш email не подтвержден. Пожалуйста, проверьте вашу почту и подтвердите email',
+      );
+    }
 
     await this.sessionService.saveSession(req, user.id);
 
@@ -65,15 +90,17 @@ export class AuthController {
   @Get('oauth/connect/:provider')
   async oauthConnect(
     @Param('provider') provider: AuthMethod,
-    @Res() res: Response
+    @Res() res: Response,
   ) {
     const providerUpperCase = provider.toLocaleUpperCase() as AuthMethod;
 
-    const oauthProviders: AuthMethod[] = Object.values(AuthMethod).filter((method) => method !== 'CREDENTIALS');
+    const oauthProviders: AuthMethod[] = Object.values(AuthMethod).filter(
+      (method) => method !== 'CREDENTIALS',
+    );
 
     if (!oauthProviders.includes(providerUpperCase)) {
       throw new BadRequestException(
-        `Не валидный провайдер. Возможные провайдеры: ${oauthProviders.join(', ').toLowerCase()}`
+        `Не валидный провайдер. Возможные провайдеры: ${oauthProviders.join(', ').toLowerCase()}`,
       );
     }
 
@@ -96,7 +123,10 @@ export class AuthController {
     try {
       const googleUser = req.user as UserProvider;
 
-      const user = await this.authService.googleAuthCallback(googleUser, AuthMethod.GOOGLE)
+      const user = await this.authService.googleAuthCallback(
+        googleUser,
+        AuthMethod.GOOGLE,
+      );
 
       await this.sessionService.saveSession(req, user.id);
 
@@ -122,7 +152,10 @@ export class AuthController {
     try {
       const githubUser = req.user as UserProvider;
 
-      const user = await this.authService.googleAuthCallback(githubUser, AuthMethod.GITHUB)
+      const user = await this.authService.googleAuthCallback(
+        githubUser,
+        AuthMethod.GITHUB,
+      );
 
       await this.sessionService.saveSession(req, user.id);
 

@@ -43,9 +43,9 @@ export class AuthService {
       throw new UnauthorizedException('Неверный email или пароль');
     }
 
-    const isValid = await verify(user.password, password);
+    const isValidPassword = await verify(user.password, password);
 
-    if (!isValid) {
+    if (!isValidPassword) {
       throw new UnauthorizedException('Неверный email или пароль');
     }
 

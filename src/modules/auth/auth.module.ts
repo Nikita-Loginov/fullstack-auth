@@ -8,6 +8,7 @@ import { GoogleRecaptchaModule } from '@nestlab/google-recaptcha';
 import { ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy, GithubStrategy } from '@/strategies';
+import { EmailConfirmationModule } from './email-confirmation/email-confirmation.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { GoogleStrategy, GithubStrategy } from '@/strategies';
     }),
     UserModule,
     SessionModule,
+    EmailConfirmationModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, GoogleStrategy, GithubStrategy],
