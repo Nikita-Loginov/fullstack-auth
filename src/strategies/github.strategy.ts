@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy } from 'passport-github2';
 import { ConfigService } from '@nestjs/config';
 import { UserProvider } from '@/lib/common/interfaces/auth';
+import { VerifyCallback } from 'passport-oauth2';
 
 @Injectable()
 export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
@@ -15,12 +16,12 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     });
   }
 
-  async validate(
+  validate(
     accessToken: string,
     refreshToken: string,
     profile: Profile,
-    done,
-  ): Promise<any> {
+    done: VerifyCallback,
+  ) {
     const { id, username, emails, photos } = profile;
 
     const user: UserProvider = {

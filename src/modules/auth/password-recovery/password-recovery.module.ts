@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { EmailConfirmationService } from './email-confirmation.service';
-import { EmailConfirmationController } from './email-confirmation.controller';
+import { PasswordRecoveryService } from './password-recovery.service';
+import { PasswordRecoveryController } from './password-recovery.controller';
 import { UserModule } from '@/modules/user/user.module';
 import { SessionModule } from '@/modules/session/session.module';
 import { MailModule } from '@/lib/mail/mail.module';
@@ -8,8 +8,8 @@ import { TokenModule } from '@/modules/token/token.module';
 
 @Module({
   imports: [UserModule, SessionModule, MailModule, TokenModule],
-  controllers: [EmailConfirmationController],
-  providers: [EmailConfirmationService],
-  exports: [EmailConfirmationService],
+  controllers: [PasswordRecoveryController],
+  providers: [PasswordRecoveryService],
+  exports: [PasswordRecoveryService],
 })
-export class EmailConfirmationModule {}
+export class PasswordRecoveryModule {}

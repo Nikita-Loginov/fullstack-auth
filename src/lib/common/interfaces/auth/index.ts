@@ -1,1 +1,1 @@
-export * from './user-provider.interface'
+export * from './user-provider.interface';

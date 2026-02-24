@@ -1,20 +1,20 @@
-import * as React from 'react'
+import * as React from 'react';
 
 import {
   Body,
   Container,
   Head,
+  Html,
   Link,
   Preview,
   Section,
   Text,
-  Html
 } from '@react-email/components';
 
 interface ConfirmationTemplateProps {
   domain: string;
   token: string;
-};
+}
 
 export const ConfirmationTemplate = ({
   domain,
@@ -25,7 +25,7 @@ export const ConfirmationTemplate = ({
   return (
     <Html lang="ru">
       <Head />
-      <Preview>Подтвердите ваш email адрес</Preview>
+      <Preview>Подтверждение email</Preview>
 
       <Body>
         <Container>
@@ -33,14 +33,20 @@ export const ConfirmationTemplate = ({
             <Text>Подтверждение email</Text>
 
             <Text>
-              Для подтверждения email адреса перейдите по ссылке ниже:
+              Для завершения регистрации и подтверждения вашего email-адреса
+              перейдите по ссылке ниже:
             </Text>
 
             <Link href={confirmLink}>Подтвердить email</Link>
 
             <Text>
+              По соображениям безопасности ссылка действительна в течение 1 часа
+              с момента отправки письма.
+            </Text>
+
+            <Text>
               Если вы не регистрировались на нашем сайте, просто проигнорируйте
-              это письмо.
+              это письмо — никаких действий предпринимать не нужно.
             </Text>
           </Section>
         </Container>

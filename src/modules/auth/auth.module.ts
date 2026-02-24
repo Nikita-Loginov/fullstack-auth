@@ -9,6 +9,8 @@ import { ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy, GithubStrategy } from '@/strategies';
 import { EmailConfirmationModule } from './email-confirmation/email-confirmation.module';
+import { PasswordRecoveryModule } from './password-recovery/password-recovery.module';
+import { TokenModule } from '../token/token.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { EmailConfirmationModule } from './email-confirmation/email-confirmation
     UserModule,
     SessionModule,
     EmailConfirmationModule,
+    PasswordRecoveryModule,
+    TokenModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, GoogleStrategy, GithubStrategy],

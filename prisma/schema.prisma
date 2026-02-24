@@ -60,6 +60,7 @@ model Token {
   type      TokenType
   expiresAt DateTime  @map("expires_at")
 
+  @@unique([email, type])
   @@map("tokens")
 }
 

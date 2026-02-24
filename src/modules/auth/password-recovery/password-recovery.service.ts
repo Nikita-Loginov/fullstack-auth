@@ -6,14 +6,14 @@ import {
 } from '@nestjs/common';
 import { TokenType } from 'generated/prisma/enums';
 import { v4 as uuid4 } from 'uuid';
-import { ConfirmationDto } from './dto';
-import { UserService } from '../../user/user.service';
-import { User } from 'generated/prisma/client';
-import { MailService } from '../../../lib/mail/mail.service';
+import { NewPasswordDto, ResetPasswordDto } from './dto';
+import { UserService } from '@/modules/user/user.service';
+import { MailService } from '@/lib/mail/mail.service';
+import { hash } from 'argon2';
 import { TokenService } from '@/modules/token/token.service';
 
 @Injectable()
-export class EmailConfirmationService {
+export class PasswordRecoveryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userService: UserService,
@@ -21,12 +21,36 @@ export class EmailConfirmationService {
     private readonly tokenServise: TokenService,
   ) {}
 
-  async newVerification(dto: ConfirmationDto) {
-    const { token } = dto;
+  async resetPassword(dto: ResetPasswordDto) {
+    const { email } = dto;
+
+    const existingUser = await this.userService.findByEmail(email);
+
+    if (!existingUser) {
+      throw new NotFoundException(
+        'Пользователь с таким email не найден. Пожалуйста , убедитесь, что вы ввели правильный email',
+      );
+    }
+
+    const resetPasswordToken = await this.generateResetEmailToken(
+      existingUser.email,
+    );
+
+    await this.mailService.sendPasswordEmailToken(
+      resetPasswordToken.email,
+      resetPasswordToken.token,
+    );
+
+    return true;
+  }
+
+  async newPassword(dto: NewPasswordDto) {
+    const { password, token } = dto;
 
     const existingToken = await this.prisma.token.findUnique({
       where: {
         token,
+        type: TokenType.PASSWORD_RESET,
       },
     });
 
@@ -54,37 +78,36 @@ export class EmailConfirmationService {
       );
     }
 
-    await this.tokenServise.deleteToken(existingToken.id);
+    if (!existingUser.password || existingUser.password.length === 0) {
+      await this.tokenServise.deleteToken(existingToken.id);
 
-    return await this.prisma.user.update({
+      return { type: 'oauth', provider: existingUser.method };
+    }
+
+    const hashedPassword = await hash(password);
+
+    await this.prisma.user.update({
       where: {
         id: existingUser.id,
       },
       data: {
-        isVerified: true,
+        password: hashedPassword,
       },
     });
+
+    await this.tokenServise.deleteToken(existingToken.id);
+
+    return { type: 'password' };
   }
 
-  async sendVerificationToken(user: User) {
-    const verificationToken = await this.generateVerificationToken(user.email);
-
-    await this.mailService.sendVerificationToken(
-      verificationToken.email,
-      verificationToken.token,
-    );
-
-    return true;
-  }
-
-  async generateVerificationToken(email: string) {
+  async generateResetEmailToken(email: string) {
     const token = uuid4();
     const expiresAt = new Date(new Date().getTime() + 3600 * 1000);
 
     await this.prisma.token.findFirst({
       where: {
         email,
-        type: TokenType.VERIFICATION,
+        type: TokenType.PASSWORD_RESET,
       },
       select: {
         id: true,
@@ -95,7 +118,7 @@ export class EmailConfirmationService {
       where: {
         email_type: {
           email,
-          type: TokenType.VERIFICATION,
+          type: TokenType.PASSWORD_RESET,
         },
       },
       update: {
@@ -106,7 +129,7 @@ export class EmailConfirmationService {
         email,
         token,
         expiresAt,
-        type: TokenType.VERIFICATION,
+        type: TokenType.PASSWORD_RESET,
       },
     });
   }

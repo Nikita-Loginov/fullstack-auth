@@ -7,18 +7,19 @@ import {
 import { Reflector } from '@nestjs/core';
 import { UserRole } from 'generated/prisma/enums';
 import { ROLES_KEY } from '../decorators/roles.decorator';
+import { User } from 'generated/prisma/client';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  canActivate(context: ExecutionContext): boolean {
     const roles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<{ user: User }>();
     const user = request.user;
 
     if (!roles.length) {

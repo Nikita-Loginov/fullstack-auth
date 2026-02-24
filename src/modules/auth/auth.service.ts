@@ -16,10 +16,21 @@ export class AuthService {
   async register(dto: RegisterDto) {
     const { email, password, name } = dto;
 
-    const isExist = await this.userService.findByEmail(email);
+    const isExistUser = await this.userService.findByEmail(email);
 
-    if (isExist) {
-      throw new ConflictException('Пользователь с таким email уже существует');
+    if (isExistUser) {
+      if (isExistUser.method === 'CREDENTIALS') {
+        throw new ConflictException(
+          'Пользователь с таким email уже существует',
+        );
+      } else if (isExistUser.password.length === 0) {
+        await this.userService.update(isExistUser.id, {
+          password,
+          method: AuthMethod.CREDENTIALS,
+        });
+
+        return await this.userService.findById(isExistUser.id);
+      }
     }
 
     const newUser = await this.userService.create({
@@ -53,18 +64,15 @@ export class AuthService {
   }
 
   async googleAuthCallback(googleUser: UserProvider, provider: AuthMethod) {
-    const user = await this.userService.findOrCreateOAuthUser(
-      provider,
-      {
-        providerId: googleUser.providerId,
-        email: googleUser.email,
-        displayName: googleUser.displayName,
-        picture: googleUser.picture,
-        accessToken: googleUser.accessToken,
-        refreshToken: googleUser.refreshToken,
-      },
-    );
+    const user = await this.userService.findOrCreateOAuthUser(provider, {
+      providerId: googleUser.providerId,
+      email: googleUser.email,
+      displayName: googleUser.displayName,
+      picture: googleUser.picture,
+      accessToken: googleUser.accessToken,
+      refreshToken: googleUser.refreshToken,
+    });
 
-    return user
+    return user;
   }
 }
