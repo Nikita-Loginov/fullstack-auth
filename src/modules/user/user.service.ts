@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { CreateUserDto, UpdateUserDto } from './dto';
+import { ChangePasswordDto, CreateUserDto, UpdateProfilerDto } from './dto';
 import { hash } from 'argon2';
 import { AuthMethod } from 'generated/prisma/enums';
 import { UserProvider } from '@/lib/common/interfaces/auth';
@@ -64,7 +64,24 @@ export class UserService {
     return user;
   }
 
-  async update(userId: string, dto: UpdateUserDto) {
+  async updateProfile(userId: string, dto: UpdateProfilerDto) {
+    const { displayName, email, picture, isTwoFactorEnabled } = dto;
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        displayName,
+        email,
+        picture,
+        isTwoFactorEnabled,
+      },
+    });
+
+    return user;
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    await this.findById(userId);
+
     const hashedPassword = dto.password ? await hash(dto.password) : null;
 
     const user = await this.prisma.user.update({
@@ -72,11 +89,12 @@ export class UserService {
         id: userId,
       },
       data: {
-        ...dto,
         password: hashedPassword,
+        method: dto.method,
       },
-      include: {
+      select: {
         accounts: true,
+        password: false,
       },
     });
 

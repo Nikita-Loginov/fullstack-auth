@@ -30,7 +30,7 @@ export class AuthService {
           'Пользователь с таким email уже существует',
         );
       } else if (isExistUser.password.length === 0) {
-        await this.userService.update(isExistUser.id, {
+        await this.userService.changePassword(isExistUser.id, {
           password,
           method: AuthMethod.CREDENTIALS,
         });
