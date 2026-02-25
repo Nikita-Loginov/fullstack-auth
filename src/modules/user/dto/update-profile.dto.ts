@@ -1,4 +1,10 @@
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class UpdateProfilerDto {
   @IsNotEmpty({ message: 'Отображаемое имя не может быть пустым' })

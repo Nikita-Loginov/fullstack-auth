@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class LoginDto {
   @IsString({ message: 'Email должен быть строкой' })
@@ -13,5 +19,5 @@ export class LoginDto {
 
   @IsOptional()
   @IsString({ message: 'Code должен быть строкой' })
-  code: string
+  code: string;
 }

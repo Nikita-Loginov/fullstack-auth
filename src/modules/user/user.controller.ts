@@ -19,16 +19,21 @@ export class UserController {
   @Authorization()
   @Get('by-id/:id')
   async findById(@Param('id') id: string) {
-    const { password: _password, ...restUser } = await this.userService.findById(id);
+    const { password: _password, ...restUser } =
+      await this.userService.findById(id);
 
-    return restUser
+    return restUser;
   }
 
   @Authorization()
   @Patch('@me')
-  async updateProfile(@UserCurrent() user: User, @Body() dto: UpdateProfilerDto,) {
-    const { password: _password, ...restUser } = await this.userService.updateProfile(user.id, dto)
+  async updateProfile(
+    @UserCurrent() user: User,
+    @Body() dto: UpdateProfilerDto,
+  ) {
+    const { password: _password, ...restUser } =
+      await this.userService.updateProfile(user.id, dto);
 
-    return restUser
+    return restUser;
   }
 }
