@@ -51,29 +51,16 @@ export class AuthController {
   @Recaptcha({ action: 'login', score: 0.5 })
   @Post('login')
   async login(@Body() dto: LoginDto, @Req() req: Request) {
-    const user = await this.authService.login(dto);
+    const result = await this.authService.login(dto);
 
-    const FIVE_MINUTES = 5 * 60 * 1000;
-
-    const lastUpdated = new Date(user.updatedAt).getTime();
-    const now = new Date().getTime();
-
-    if (!user.isVerified && now - lastUpdated > FIVE_MINUTES) {
-      try {
-        await this.emailConfirmationService.sendVerificationToken(user);
-      } catch (error) {
-        console.error(
-          `Ошибка при отправке сообщения на почту для ${user.email}`,
-          error,
-        );
-      }
+    if (result.type === 'TWO_FACTOR_REQUIRED') {
+      return {
+        message: 'На вашу почту отправлен код двухфакторной аутентификации',
+        status: 'CHECK_TWO_FACTOR',
+      };
     }
 
-    if (!user.isVerified) {
-      throw new UnauthorizedException(
-        'Ваш email не подтвержден. Пожалуйста, проверьте вашу почту и подтвердите email',
-      );
-    }
+    const { user } = result;
 
     await this.sessionService.saveSession(req, user.id);
 

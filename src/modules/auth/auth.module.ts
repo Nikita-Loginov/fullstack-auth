@@ -11,6 +11,9 @@ import { GoogleStrategy, GithubStrategy } from '@/strategies';
 import { EmailConfirmationModule } from './email-confirmation/email-confirmation.module';
 import { PasswordRecoveryModule } from './password-recovery/password-recovery.module';
 import { TokenModule } from '../token/token.module';
+import { TwoFactorAuthModule } from './two-factor-auth/two-factor-auth.module';
+import { TwoFactorAuthService } from './two-factor-auth/two-factor-auth.service';
+import { EmailConfirmationService } from './email-confirmation/email-confirmation.service';
 
 @Module({
   imports: [
@@ -24,6 +27,7 @@ import { TokenModule } from '../token/token.module';
     EmailConfirmationModule,
     PasswordRecoveryModule,
     TokenModule,
+    TwoFactorAuthModule
   ],
   controllers: [AuthController],
   providers: [AuthService, GoogleStrategy, GithubStrategy],
